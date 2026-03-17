@@ -1,3 +1,4 @@
+# Android
 *.iml
 .gradle
 /local.properties
@@ -8,3 +9,20 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+dist/
+build/
+*.spec
+venv/
+.venv/
+
+# Binaries
+*.exe
+*.apk
+server_ip.txt
+inventory.json
+warframe-api-helper.exe

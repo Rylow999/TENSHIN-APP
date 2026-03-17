@@ -22,12 +22,15 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tenshin.app.R
 import com.tenshin.app.navigation.NavItem
 import com.tenshin.app.ui.components.PortalCard
 import com.tenshin.app.ui.theme.*
@@ -49,7 +52,6 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // ── Barra de Navegación Optimizada ──
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,7 +64,7 @@ fun HomeScreen(
             }
             
             Text(
-                text = if (isHacked) "SYS_HOME" else "CENTRAL DE MANDO",
+                text = if (isHacked) stringResource(R.string.sys_home) else stringResource(R.string.central_command),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                 letterSpacing = 2.sp,
@@ -79,15 +81,13 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            // ── Status card con Glow Dinámico ──
             item {
                 StatusCard(uiState, isHacked)
             }
 
-            // ── Quote del espectro ──
             item {
                 Text(
-                    text      = if (isHacked) "[DATA_CORRUPTED]: El Vacío nos reclama." else "\"El Vacío guarda sus secretos. Yo guardo los tuyos, Tenno.\"",
+                    text      = if (isHacked) stringResource(R.string.quote_hacked) else stringResource(R.string.quote),
                     fontSize  = 12.sp,
                     color     = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -98,10 +98,9 @@ fun HomeScreen(
                 )
             }
 
-            // ── Portales ──
             item {
                 Text(
-                    text          = if (isHacked) "> ACCESO_A_RED" else "PORTALES DEL RELÉ",
+                    text          = if (isHacked) stringResource(R.string.access_network) else stringResource(R.string.portals_label),
                     fontSize      = 10.sp,
                     color         = MaterialTheme.colorScheme.primary,
                     fontWeight    = FontWeight.Bold,
@@ -158,7 +157,6 @@ fun StatusCard(uiState: UiState, isHacked: Boolean) {
                     style = Stroke(width = 1.dp.toPx()),
                     cornerRadius = CornerRadius(16.dp.toPx())
                 )
-                // Glow effect
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(accentColor.copy(alpha = glowAlpha), Color.Transparent),
@@ -173,7 +171,7 @@ fun StatusCard(uiState: UiState, isHacked: Boolean) {
     ) {
         Column {
             Text(
-                text = if (isHacked) "CRITICAL_SYSTEM_SYNC" else "ARSENAL SINCRONIZADO",
+                text = if (isHacked) stringResource(R.string.critical_system_sync) else stringResource(R.string.arsenal_synced),
                 fontSize = 10.sp,
                 color = accentColor,
                 fontWeight = FontWeight.Bold,

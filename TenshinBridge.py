@@ -15,7 +15,7 @@ from zeroconf import ServiceInfo, Zeroconf
 import pystray
 from PIL import Image, ImageDraw
 
-# Configuración
+# --- CONFIGURATION ---
 WS_PORT = 8080
 SAINAN_RELEASE_URL = "https://github.com/Sainan/warframe-api-helper/releases/download/1.1.1/warframe-api-helper.exe"
 HELPER_EXE = "warframe-api-helper.exe"
@@ -41,18 +41,24 @@ class TenshinBridge:
 
     async def handler(self, websocket):
         self.clients.add(websocket)
-        print(f"📱 Celular conectado desde {websocket.remote_address}")
+        print(f"📱 Connection established from {websocket.remote_address}")
 
-        # Enviar señal de "HACKED" al conectar por primera vez
+        # Immediate 1999 Protocol Handshake
         await websocket.send(json.dumps({"type": "system_status", "status": "HACKED_1999"}))
 
         try:
             if self.inventory_path.exists():
                 data = self.inventory_path.read_text(encoding='utf-8')
-                await websocket.send(json.dumps({"type": "inventory", "payload": json.loads(data)}))
+                await websocket.send(json.dumps({
+                    "type": "inventory",
+                    "payload": json.loads(data),
+                    "timestamp": time.time()
+                }))
 
             async for message in websocket:
-                pass # Mantener conexión viva
+                pass
+        except Exception as e:
+            print(f"Connection error: {e}")
         finally:
             self.clients.remove(websocket)
 
@@ -61,11 +67,18 @@ class TenshinBridge:
             return
         try:
             data = json.loads(self.inventory_path.read_text(encoding='utf-8'))
-            payload = json.dumps({"type": "inventory_update", "payload": data})
+            payload = json.dumps({
+                "type": "inventory_update",
+                "payload": data,
+                "timestamp": time.time()
+            })
             for client in self.clients:
-                await client.send(payload)
+                try:
+                    await client.send(payload)
+                except:
+                    pass
         except Exception as e:
-            print(f"Error en broadcast: {e}")
+            print(f"Broadcast error: {e}")
 
     def start_ws_server(self):
         self.loop = asyncio.new_event_loop()
@@ -73,20 +86,24 @@ class TenshinBridge:
 
         async def main_ws():
             async with serve(self.handler, "0.0.0.0", WS_PORT):
-                await asyncio.Future() # run forever
+                await asyncio.Future()
 
         self.loop.run_until_complete(main_ws())
 
     def download_sainan_helper(self):
         if not os.path.exists(HELPER_EXE):
-            print("💾 Descargando Warframe API Helper de Sainan...")
-            r = requests.get(SAINAN_RELEASE_URL, allow_redirects=True)
-            open(HELPER_EXE, 'wb').write(r.content)
-            print("✅ Descarga completada.")
+            print("💾 Downloading Sainan's Warframe API Helper...")
+            try:
+                r = requests.get(SAINAN_RELEASE_URL, allow_redirects=True, timeout=30)
+                open(HELPER_EXE, 'wb').write(r.content)
+                print("✅ Download complete.")
+            except Exception as e:
+                print(f"❌ Download failed: {e}")
 
     def run_sainan_helper(self):
-        print("🚀 Iniciando API Helper...")
-        subprocess.Popen([HELPER_EXE], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        if os.path.exists(HELPER_EXE):
+            print("🚀 Launching API Helper...")
+            subprocess.Popen([HELPER_EXE], creationflags=subprocess.CREATE_NEW_CONSOLE)
 
     def on_inventory_changed(self):
         if self.loop:
@@ -100,7 +117,6 @@ class InventoryHandler(FileSystemEventHandler):
             self.bridge.on_inventory_changed()
 
 def run_tray(bridge):
-    # Ícono estilo terminal retro
     img = Image.new('RGB', (64, 64), (5, 5, 5))
     draw = ImageDraw.Draw(img)
     draw.text((10, 10), "1999", fill=(0, 255, 65))
@@ -111,33 +127,31 @@ def run_tray(bridge):
 
     icon = pystray.Icon("TenshinBridge", img, "TENSHIN BRIDGE: 1999", menu=pystray.Menu(
         pystray.MenuItem(f"IP: {bridge.get_ip()}", lambda: None, enabled=False),
-        pystray.MenuItem("Forzar Sincronización", bridge.run_sainan_helper),
-        pystray.MenuItem("Salir", quit_app)
+        pystray.MenuItem("Force Sync", bridge.run_sainan_helper),
+        pystray.MenuItem("Exit", quit_app)
     ))
     icon.run()
 
 if __name__ == "__main__":
-    print("═" * 40)
-    print("  SISTEMA HÖLLVANIA - PROTOCOLO 1999")
-    print("═" * 40)
+    print("═" * 55)
+    print("  HÖLLVANIA SYSTEM - PROTOCOL 1999 ACTIVE")
+    print("  TENSHIN BRIDGE v1.0.0")
+    print("═" * 55)
 
     bridge = TenshinBridge()
     bridge.download_sainan_helper()
     bridge.run_sainan_helper()
 
-    # Zeroconf Discovery
     zeroconf = Zeroconf()
     info = ServiceInfo("_tenshin._tcp.local.", "TenshinBridge._tenshin._tcp.local.",
                        addresses=[socket.inet_aton(bridge.get_ip())], port=WS_PORT)
     zeroconf.register_service(info)
 
-    # File Watcher
     observer = Observer()
     observer.schedule(InventoryHandler(bridge), path='.', recursive=False)
     observer.start()
 
-    # Servidor en thread separado
     threading.Thread(target=bridge.start_ws_server, daemon=True).start()
 
-    print(f"📡 Esperando conexión en {bridge.get_ip()}:{WS_PORT}...")
+    print(f"📡 Waiting for Tenno connection on {bridge.get_ip()}:{WS_PORT}...")
     run_tray(bridge)

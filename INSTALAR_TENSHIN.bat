@@ -1,33 +1,32 @@
 @echo off
 color 0a
-title SISTEMA DE TRANSMISION ENTRATI - PROTOCOLO 1999
+title ENTRATI TRANSMISSION SYSTEM - PROTOCOL 1999
 cls
 echo .
-echo  [ SISTEMA HÖLLVANIA DETECTADO ]
-echo  [ INICIANDO TRANSFERENCIA DE DATOS DE EL ESPECTRO ]
+echo  [ HÖLLVANIA SYSTEM DETECTED ]
+echo  [ INITIATING SPECTRUM DATA TRANSFER ]
 echo .
 timeout /t 1 >nul
-echo  >> Accediendo a archivos de Sainan...
+echo  >> Accessing Sainan API files...
 timeout /t 1 >nul
-echo  >> Sincronizando con el vacio...
+echo  >> Synchronizing with the Void...
 timeout /t 1 >nul
 
-:: Crear carpeta en la PC
+:: Create folder on the PC
 if not exist "C:\Tenshin1999" mkdir "C:\Tenshin1999"
 
-:: Copiar archivos desde el celular (asumiendo que el BAT se ejecuta desde la ruta del celular)
+:: Copy files (the EXE must be in the same folder as this BAT)
 copy "TenshinBridge.exe" "C:\Tenshin1999\" /y
-copy "inventory.json" "C:\Tenshin1999\" /y
 
-:: Agregar al inicio de Windows
+:: Add to Windows Startup
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "TenshinBridge" /t REG_SZ /d "C:\Tenshin1999\TenshinBridge.exe" /f
 
-:: Configurar Firewall (Requiere permisos)
+:: Configure Firewall (Requires permissions)
 netsh advfirewall firewall add rule name="Tenshin Bridge 1999" dir=in action=allow protocol=TCP localport=8080
 
 echo .
-echo  [ INSTALACION COMPLETADA ]
-echo  [ ARTHUR ESTA LISTO PARA LA SINCRONIZACION ]
+echo  [ INSTALLATION COMPLETE ]
+echo  [ ARTHUR IS READY FOR SYNCHRONIZATION ]
 echo .
 pause
 start C:\Tenshin1999\TenshinBridge.exe

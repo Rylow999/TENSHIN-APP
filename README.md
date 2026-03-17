@@ -1,33 +1,34 @@
-# ⚔️ TENSHIN — Warframe Helper (Protocolo 1999)
+# ⚔️ TENSHIN — Warframe Helper (Protocol 1999)
 
-Tenshin es una herramienta avanzada para Tenno que buscan sincronizar su arsenal en tiempo real con una estética inspirada en la **Aventura 1999** de Warframe.
+Tenshin is an advanced tool for Tenno looking to synchronize their arsenal in real-time with an aesthetic inspired by the **Warframe 1999** adventure.
 
-## 🚀 Instalación de un Solo Clic (PC)
+## 🚀 One-Click Installation (PC)
 
-Para vincular tu celular con tu PC y activar la sincronización en tiempo real:
+To link your mobile device with your PC and activate real-time synchronization:
 
-1. **Conecta tu celular** a la PC mediante USB (asegúrate de tener la **Depuración USB** activada en opciones de desarrollador).
-2. Abre la carpeta del celular en tu PC y entra en `Download/Tenshin1999/`.
-3. Ejecuta el archivo **`INSTALAR_TENSHIN.bat`**.
-4. ¡Listo! El sistema se configurará solo, abrirá los puertos del firewall e iniciará la "infección" visual en tu app.
+1. **Connect your mobile device** to the PC via USB (ensure **USB Debugging** is enabled in developer options).
+2. Open the mobile device's folder on your PC and navigate to `Download/Tenshin1999/`.
+3. Run the file **`INSTALL_TENSHIN.bat`**.
+4. That's it! The system will configure itself, open the firewall ports, and initiate the visual "infection" on your app.
 
-## 🛠️ Características
+## 🛠️ Features
 
-- **Sincronización Real-Time:** Los cambios en tu inventario de Warframe aparecen al instante en el móvil.
-- **Protocolo 1999:** Al conectarse, la app muta visualmente al estilo verde fósforo de Höllvania con efectos de vibración y sonido.
-- **Precios de Mercado:** Consulta tendencias y precios de warframe.market integrados.
-- **Estado del Mundo:** Ciclos de día/noche, pesca y minería de todos los mundos abiertos.
+- **Real-Time Sync:** Changes in your Warframe inventory appear instantly on your mobile device via WebSockets and `TenshinBridge.exe`.
+- **Protocol 1999:** Upon connection, the app visually mutates into the Höllvania phosphorus green style with immersive vibration and sound effects.
+- **Market Prices:** Consult real-time prices and 90-day history from warframe.market integrated into the app.
+- **World State:** Track day/night cycles, fishing, and mining info for all open-world hubs (Cetus, Fortuna, Deimos).
+- **Entrati Analytics:** Detailed item analysis with a "Spectrum" verdict for market movements.
 
-## 📦 Requisitos de Desarrollo
+## 📦 Development Requirements
 
-- Android Studio (Koala o superior)
-- Python 3.10+ (para el Bridge de la PC)
+- Android Studio (Koala or higher)
+- Python 3.10+ (for the PC Bridge)
 - Sainan's Warframe API Helper (v1.1.1)
 
-## 📜 Permisos de la App
-- `INTERNET`: Para conectar con las APIs de Warframe y el Bridge local.
-- `ACCESS_NETWORK_STATE`: Para descubrimiento automático de la PC en WiFi.
-- `VIBRATE`: Para efectos inmersivos de "infección" de código.
+## 📜 App Permissions
+- `INTERNET`: To connect with Warframe APIs and the local Bridge.
+- `ACCESS_NETWORK_STATE`: For automatic PC discovery on WiFi.
+- `VIBRATE`: For immersive "code infection" effects.
 
 ---
-*Desarrollado para el Sistema Origen. Arthur te espera.*
+*Developed for the Origin System. Arthur awaits.*

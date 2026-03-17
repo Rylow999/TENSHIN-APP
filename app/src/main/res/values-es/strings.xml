@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tenshin</string>
+    <string name="central_command">CENTRAL DE MANDO</string>
+    <string name="sys_home">SISTEMA_INICIO</string>
+    <string name="sync_label">sinc</string>
+    <string name="sys_sync">SINCRONIZACIÓN_SISTEMA</string>
+    <string name="arsenal_synced">ARSENAL SINCRONIZADO</string>
+    <string name="critical_system_sync">SINCRONIZACIÓN_CRÍTICA</string>
+    <string name="quote">\"El Vacío guarda sus secretos. Yo guardo los tuyos, Tenno.\"</string>
+    <string name="quote_hacked">[DATOS_CORRUPTOS]: El Vacío nos reclama.</string>
+    <string name="portals_label">PORTALES DEL RELÉ</string>
+    <string name="access_network">ACCESO_A_RED</string>
+    <string name="home_label">Inicio</string>
+    <string name="world_state_label">Estado del Mundo</string>
+    <string name="price_label">Precio / Tendencia</string>
+    <string name="inventory_label">Inventario</string>
+    <string name="support_label">Apoyar Proyecto</string>
+    <string name="hollvania_title">HÖLLVANIA 1999</string>
+</resources>

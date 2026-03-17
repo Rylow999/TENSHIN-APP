@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="access_network">ACCESS_NETWORK</string>
     <string name="app_name">Tenshin</string>
+    <string name="arsenal_synced">ARSENAL SYNCED</string>
+    <string name="central_command">CENTRAL COMMAND</string>
+    <string name="critical_system_sync">CRITICAL_SYSTEM_SYNC</string>
+    <string name="hollvania_title">HÖLLVANIA 1999</string>
+    <string name="home_label">Home</string>
+    <string name="inventory_label">Inventory</string>
+    <string name="portals_label">RELY PORTALS</string>
+    <string name="price_label">Price / Trend</string>
+    <string name="quote">\"The Void keeps its secrets. I keep yours, Tenno.\"</string>
+    <string name="quote_hacked">[DATA_CORRUPTED]: The Void claims us.</string>
+    <string name="support_label">Support Project</string>
+    <string name="sync_label">sync</string>
+    <string name="sys_home">SYS_HOME</string>
+    <string name="sys_sync">SYS_SYNC</string>
+    <string name="world_state_label">World State</string>
     <style name="Theme.Tenshin" parent="android:Theme.Material.NoActionBar.Fullscreen"/>
 </resources>
