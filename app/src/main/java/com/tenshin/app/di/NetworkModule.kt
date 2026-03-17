@@ -5,6 +5,7 @@ import com.tenshin.app.data.remote.ApiService
 import com.tenshin.app.data.remote.AutoConfig
 import com.tenshin.app.data.remote.WarframeMarketApi
 import com.tenshin.app.data.remote.WarframeHelperApi
+import com.tenshin.app.data.remote.WarframeStatApi
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit
 object NetworkModule {
     private const val PLACEHOLDER_URL = "https://jsonplaceholder.typicode.com/"
     private const val WFM_API_URL = "https://api.warframe.market/v1/"
+    private const val WF_STAT_URL = "https://api.warframestat.us/"
     
     @Volatile
     private var helperBaseUrl: String? = null
@@ -29,7 +31,7 @@ object NetworkModule {
 
     val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(2, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS) // Aumentado un poco para redes más lentas
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
@@ -39,6 +41,10 @@ object NetworkModule {
 
     val warframeMarketApi: WarframeMarketApi by lazy {
         createRetrofit(WFM_API_URL).create(WarframeMarketApi::class.java)
+    }
+
+    val warframeStatApi: WarframeStatApi by lazy {
+        createRetrofit(WF_STAT_URL).create(WarframeStatApi::class.java)
     }
 
     fun setHelperIp(ip: String) {

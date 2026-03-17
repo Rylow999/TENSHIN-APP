@@ -1,10 +1,12 @@
 package com.tenshin.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tenshin.app.data.model.Inventory
+import com.tenshin.app.data.remote.NetworkDiscovery
 import com.tenshin.app.data.repository.WarframeRepository
 import com.tenshin.app.di.NetworkModule
 import kotlinx.coroutines.delay
@@ -23,9 +25,9 @@ sealed interface InventoryUiState {
     data class Error(val message: String) : InventoryUiState
 }
 
-class InventoryViewModel(
-    private val repository: WarframeRepository = WarframeRepository()
-) : ViewModel() {
+class InventoryViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = WarframeRepository()
+    private val discovery = NetworkDiscovery(application)
 
     private val _uiState = MutableStateFlow<InventoryUiState>(InventoryUiState.Idle)
     val uiState: StateFlow<InventoryUiState> = _uiState.asStateFlow()
@@ -39,6 +41,18 @@ class InventoryViewModel(
     fun syncInventory() {
         viewModelScope.launch {
             _uiState.value = InventoryUiState.Syncing
+            
+            // Intento de auto-configuración si no hay IP
+            if (NetworkModule.getHelperIp() == null) {
+                val discoveredIp = discovery.discoverHelperIp()
+                if (discoveredIp != null) {
+                    NetworkModule.setHelperIp(discoveredIp)
+                } else {
+                    _uiState.value = InventoryUiState.Error("No se encontró la PC en la red local.")
+                    return@launch
+                }
+            }
+
             repository.syncInventory()
                 .onSuccess { inventory ->
                     _uiState.value = InventoryUiState.Success(inventory)
@@ -69,33 +83,21 @@ class InventoryViewModel(
                             val inventory = gson.fromJson(payload, Inventory::class.java)
                             _uiState.value = InventoryUiState.Success(inventory, isRealTime = true)
                             
-                            // Si acabamos de recibir el inventario y estábamos en modo hacked, volver a la normalidad tras un breve delay
                             if (_isHacked.value) {
                                 viewModelScope.launch {
-                                    delay(3000) // Mantener el efecto 3 segundos después de la sync
+                                    delay(3000)
                                     _isHacked.value = false
                                 }
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    // Log error
-                }
+                } catch (e: Exception) { }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 _isHacked.value = false
             }
         })
-    }
-
-    fun uploadInventory(inventory: Inventory) {
-        viewModelScope.launch {
-            repository.backupInventory(inventory)
-                .onFailure { error ->
-                    _uiState.value = InventoryUiState.Error(error.message ?: "Upload failed")
-                }
-        }
     }
 
     override fun onCleared() {

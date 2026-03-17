@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="ColorAccent">#00E5CC</color>
+    <color name="ColorBg">#0A0C0F</color>
     <string name="access_network">ACCESS_NETWORK</string>
     <string name="app_name">Tenshin</string>
     <string name="arsenal_synced">ARSENAL SYNCED</string>

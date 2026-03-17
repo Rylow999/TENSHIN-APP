@@ -1,6 +1,7 @@
 package com.tenshin.app.data.repository
 
 import com.tenshin.app.data.model.Inventory
+import com.tenshin.app.data.remote.VoidTraderResponse
 import com.tenshin.app.data.remote.WarframeHelperApi
 import com.tenshin.app.data.remote.WarframeMarketApi
 import com.tenshin.app.di.NetworkModule
@@ -9,6 +10,7 @@ import kotlinx.coroutines.withContext
 
 class WarframeRepository {
     private val marketApi = NetworkModule.warframeMarketApi
+    private val statApi = NetworkModule.warframeStatApi
     
     suspend fun syncInventory(): Result<Inventory> = withContext(Dispatchers.IO) {
         try {
@@ -30,6 +32,15 @@ class WarframeRepository {
             val response = helperApi.uploadInventory(inventory)
             if (response.success) Result.success(true) 
             else Result.failure(Exception(response.message))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getBaroData(): Result<VoidTraderResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = statApi.getVoidTrader()
+            Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
         }

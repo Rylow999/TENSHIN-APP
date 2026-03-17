@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,6 +41,7 @@ import com.tenshin.app.navigation.tenshinNavItems
 import com.tenshin.app.ui.theme.*
 import com.tenshin.app.ui.components.*
 import com.tenshin.app.ui.viewmodel.InventoryViewModel
+import com.tenshin.app.ui.viewmodel.InventoryUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -62,11 +64,23 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     val drawerState   = rememberDrawerState(DrawerValue.Closed)
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope         = rememberCoroutineScope()
     val navController = rememberNavController()
     val context       = LocalContext.current
     val isHacked by inventoryViewModel.isHacked.collectAsState()
+    val uiState by inventoryViewModel.uiState.collectAsState()
     
+    // Observar errores de sincronización
+    LaunchedEffect(uiState) {
+        if (uiState is InventoryUiState.Error) {
+            snackbarHostState.showSnackbar(
+                message = (uiState as InventoryUiState.Error).message,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
     LaunchedEffect(isHacked) {
         if (isHacked) {
             val vibrator = context.getSystemService(Vibrator::class.java)
@@ -148,6 +162,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     ) {
         Scaffold(
             containerColor = backgroundColor,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 Box(
                     modifier = Modifier
@@ -210,12 +225,12 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                                 .background(syncBg, RoundedCornerShape(12.dp))
                                 .drawBehind {
                                     drawRoundRect(
-                                        color        = primaryColor.copy(alpha = 0.4f),
+                                        color        = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor.copy(alpha = 0.4f),
                                         cornerRadius = CornerRadius(12.dp.toPx()),
                                         style        = Stroke(width = 1.5.dp.toPx()),
                                     )
                                 }
-                                .clickable {
+                                .clickable(enabled = uiState !is InventoryUiState.Syncing) {
                                     syncPulse = true
                                     inventoryViewModel.syncInventory()
                                     scope.launch {
@@ -226,9 +241,9 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) {
                             Text(
-                                text = if (isHacked) "SYS_SYNC" else "⟳ sync",
+                                text = if (uiState is InventoryUiState.Syncing) "..." else (if (isHacked) "SYS_SYNC" else "⟳ sync"),
                                 fontSize = 12.sp,
-                                color = primaryColor,
+                                color = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = FontFamily.Monospace
                             )
