@@ -24,9 +24,6 @@ fun NavGraph(
                         popUpTo(Screen.Home.route)
                         launchSingleTop = true
                     }
-                },
-                onBack = {
-                    navController.popBackStack()
                 }
             )
         }
