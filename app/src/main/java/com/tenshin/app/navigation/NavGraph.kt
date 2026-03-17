@@ -45,10 +45,13 @@ fun NavGraph(
         composable(Screen.Soporte.route) {
             SoporteScreen()
         }
+
+        composable(Screen.Plan.route) {
+            PlanScreen()
+        }
         
         // Placeholder routes for screens not yet fully implemented
         val placeholderRoutes = listOf(
-            Screen.Plan.route,
             Screen.Rivens.route,
             Screen.Baro.route,
             Screen.Sesiones.route

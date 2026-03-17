@@ -20,7 +20,6 @@ android {
 
     buildTypes {
         debug {
-            // Personalizamos el nombre del APK para que no diga solo "debug"
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
         }
@@ -61,6 +60,9 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.coroutines.android)
+    
+    // Gemini AI
+    implementation(libs.generative.ai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
