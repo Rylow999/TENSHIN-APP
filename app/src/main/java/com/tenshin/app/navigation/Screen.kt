@@ -10,6 +10,7 @@ import com.tenshin.app.ui.theme.ColorRiven
 //  Rutas de navegación — sealed class Screen
 // ══════════════════════════════════════════
 sealed class Screen(val route: String) {
+    object Sync        : Screen("sync")
     object Home        : Screen("home")
     object Precio      : Screen("precio")
     object Inventario  : Screen("inventario")

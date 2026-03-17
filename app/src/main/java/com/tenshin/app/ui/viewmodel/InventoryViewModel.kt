@@ -1,6 +1,7 @@
 package com.tenshin.app.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -28,6 +29,8 @@ sealed interface InventoryUiState {
 class InventoryViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = WarframeRepository()
     private val discovery = NetworkDiscovery(application)
+    private val sharedPrefs = application.getSharedPreferences("tenshin_prefs", Context.MODE_PRIVATE)
+    private val gson = Gson()
 
     private val _uiState = MutableStateFlow<InventoryUiState>(InventoryUiState.Idle)
     val uiState: StateFlow<InventoryUiState> = _uiState.asStateFlow()
@@ -36,13 +39,30 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     val isHacked: StateFlow<Boolean> = _isHacked.asStateFlow()
 
     private var webSocket: WebSocket? = null
-    private val gson = Gson()
+
+    init {
+        loadCachedInventory()
+    }
+
+    private fun loadCachedInventory() {
+        val cachedJson = sharedPrefs.getString("cached_inventory", null)
+        if (cachedJson != null) {
+            try {
+                val inventory = gson.fromJson(cachedJson, Inventory::class.java)
+                _uiState.value = InventoryUiState.Success(inventory)
+            } catch (e: Exception) { }
+        }
+    }
+
+    private fun saveInventoryToCache(inventory: Inventory) {
+        val json = gson.toJson(inventory)
+        sharedPrefs.edit().putString("cached_inventory", json).apply()
+    }
 
     fun syncInventory() {
         viewModelScope.launch {
             _uiState.value = InventoryUiState.Syncing
             
-            // Intento de auto-configuración si no hay IP
             if (NetworkModule.getHelperIp() == null) {
                 val discoveredIp = discovery.discoverHelperIp()
                 if (discoveredIp != null) {
@@ -56,6 +76,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             repository.syncInventory()
                 .onSuccess { inventory ->
                     _uiState.value = InventoryUiState.Success(inventory)
+                    saveInventoryToCache(inventory)
                     startRealTimeSync()
                 }
                 .onFailure { error ->
@@ -82,6 +103,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                             val payload = json.get("payload")
                             val inventory = gson.fromJson(payload, Inventory::class.java)
                             _uiState.value = InventoryUiState.Success(inventory, isRealTime = true)
+                            saveInventoryToCache(inventory)
                             
                             if (_isHacked.value) {
                                 viewModelScope.launch {

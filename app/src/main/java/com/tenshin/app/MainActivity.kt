@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,7 +14,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -71,7 +69,6 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     val isHacked by inventoryViewModel.isHacked.collectAsState()
     val uiState by inventoryViewModel.uiState.collectAsState()
     
-    // Observar errores de sincronización
     LaunchedEffect(uiState) {
         if (uiState is InventoryUiState.Error) {
             snackbarHostState.showSnackbar(
@@ -84,12 +81,12 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     LaunchedEffect(isHacked) {
         if (isHacked) {
             val vibrator = context.getSystemService(Vibrator::class.java)
-            if (vibrator != null) {
+            vibrator?.let {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200, 50, 400), -1))
+                    it.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200, 50, 400), -1))
                 } else {
                     @Suppress("DEPRECATION")
-                    vibrator.vibrate(500)
+                    it.vibrate(500)
                 }
             }
         }
@@ -100,11 +97,11 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val activeSection = navBackStackEntry?.destination?.route ?: Screen.Home.route
+    val activeRoute = navBackStackEntry?.destination?.route ?: Screen.Sync.route
 
     var syncPulse by remember { mutableStateOf(false) }
 
-    val activeItem = tenshinNavItems.find { it.id == activeSection }
+    val activeItem = tenshinNavItems.find { it.id == activeRoute }
     val portals    = tenshinNavItems.filter { it.id != "home" }
 
     val syncBg by animateColorAsState(
@@ -120,6 +117,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
 
     ModalNavigationDrawer(
         drawerState   = drawerState,
+        gesturesEnabled = activeRoute != Screen.Sync.route,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = surfaceColor,
@@ -127,7 +125,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
             ) {
                 DrawerContent(
                     items      = tenshinNavItems,
-                    activeId   = activeSection,
+                    activeId   = activeRoute,
                     onNavigate = { id ->
                         scope.launch { drawerState.close() }
                         navController.navigate(id) {
@@ -147,9 +145,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                         }
                         try {
                             context.startActivity(intent)
-                        } catch (e: Exception) {
-                            // Handle case where no email app is installed
-                        }
+                        } catch (e: Exception) { }
                     },
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -164,89 +160,91 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
             containerColor = backgroundColor,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(110.dp) 
-                        .background(surfaceColor)
-                        .drawBehind {
-                            drawLine(
-                                color = if (isHacked) ColorHackerGreen else ColorBorder,
-                                start = androidx.compose.ui.geometry.Offset(0f, size.height),
-                                end = androidx.compose.ui.geometry.Offset(size.width, size.height),
-                                strokeWidth = 1.dp.toPx()
-                            )
-                        }
-                        .statusBarsPadding(),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                if (activeRoute != Screen.Sync.route) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier
-                                .clickable { scope.launch { drawerState.open() } }
-                                .padding(8.dp),
-                        ) {
-                            listOf(24f, 16f, 24f).forEach { width ->
-                                Box(
-                                    Modifier
-                                        .width(width.dp)
-                                        .height(2.5.dp)
-                                        .background(primaryColor, RoundedCornerShape(1.2.dp))
+                            .fillMaxWidth()
+                            .height(90.dp) // Reducido de 110dp para subir el menú
+                            .background(surfaceColor)
+                            .drawBehind {
+                                drawLine(
+                                    color = if (isHacked) ColorHackerGreen else ColorBorder,
+                                    start = androidx.compose.ui.geometry.Offset(0f, size.height),
+                                    end = androidx.compose.ui.geometry.Offset(size.width, size.height),
+                                    strokeWidth = 1.dp.toPx()
                                 )
                             }
-                        }
-
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                text          = if (isHacked) "HÖLLVANIA 1999" else "TENSHIN",
-                                fontSize      = 12.sp,
-                                color         = primaryColor.copy(alpha = 0.7f),
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily    = if (isHacked) FontFamily.Monospace else FontFamily.Default
-                            )
-                            Text(
-                                text       = activeItem?.label ?: "Inicio",
-                                fontSize   = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color      = onSurfaceColor,
-                            )
-                        }
-
-                        Box(
-                            contentAlignment = Alignment.Center,
+                            .statusBarsPadding(),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically, // Cambiado de Bottom a CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier
-                                .background(syncBg, RoundedCornerShape(12.dp))
-                                .drawBehind {
-                                    drawRoundRect(
-                                        color        = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor.copy(alpha = 0.4f),
-                                        cornerRadius = CornerRadius(12.dp.toPx()),
-                                        style        = Stroke(width = 1.5.dp.toPx()),
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier
+                                    .clickable { scope.launch { drawerState.open() } }
+                                    .padding(8.dp),
+                            ) {
+                                listOf(24f, 16f, 24f).forEach { width ->
+                                    Box(
+                                        Modifier
+                                            .width(width.dp)
+                                            .height(2.5.dp)
+                                            .background(primaryColor, RoundedCornerShape(1.2.dp))
                                     )
                                 }
-                                .clickable(enabled = uiState !is InventoryUiState.Syncing) {
-                                    syncPulse = true
-                                    inventoryViewModel.syncInventory()
-                                    scope.launch {
-                                        delay(600)
-                                        syncPulse = false
+                            }
+
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text          = if (isHacked) "HÖLLVANIA 1999" else "TENSHIN",
+                                    fontSize      = 10.sp,
+                                    color         = primaryColor.copy(alpha = 0.7f),
+                                    letterSpacing = 2.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily    = if (isHacked) FontFamily.Monospace else FontFamily.Default
+                                )
+                                Text(
+                                    text       = activeItem?.label ?: "Inicio",
+                                    fontSize   = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color      = onSurfaceColor,
+                                )
+                            }
+
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .background(syncBg, RoundedCornerShape(12.dp))
+                                    .drawBehind {
+                                        drawRoundRect(
+                                            color        = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor.copy(alpha = 0.4f),
+                                            cornerRadius = CornerRadius(12.dp.toPx()),
+                                            style        = Stroke(width = 1.5.dp.toPx()),
+                                        )
                                     }
-                                }
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
-                        ) {
-                            Text(
-                                text = if (uiState is InventoryUiState.Syncing) "..." else (if (isHacked) "SYS_SYNC" else "⟳ sync"),
-                                fontSize = 12.sp,
-                                color = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontFamily = FontFamily.Monospace
-                            )
+                                    .clickable(enabled = uiState !is InventoryUiState.Syncing) {
+                                        syncPulse = true
+                                        inventoryViewModel.syncInventory()
+                                        scope.launch {
+                                            delay(600)
+                                            syncPulse = false
+                                        }
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            ) {
+                                Text(
+                                    text = if (uiState is InventoryUiState.Syncing) "..." else (if (isHacked) "SYS_SYNC" else "⟳ sync"),
+                                    fontSize = 11.sp,
+                                    color = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
                         }
                     }
                 }
@@ -255,11 +253,12 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(if (activeRoute == Screen.Sync.route) PaddingValues(0.dp) else innerPadding),
             ) {
                 NavGraph(
                     navController = navController,
-                    portals = portals
+                    portals = portals,
+                    inventoryViewModel = inventoryViewModel
                 )
             }
         }
