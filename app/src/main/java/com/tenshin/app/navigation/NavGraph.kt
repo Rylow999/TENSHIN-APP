@@ -1,0 +1,65 @@
+package com.tenshin.app.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.tenshin.app.ui.screens.*
+
+// ══════════════════════════════════════════
+//  NavGraph
+//  → NavHost wiring para las pantallas de Tenshin
+// ══════════════════════════════════════════
+@Composable
+fun NavGraph(
+    navController: NavHostController,
+    startDestination: String = Screen.Home.route,
+    portals: List<NavItem>,
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable(Screen.Home.route) {
+            HomeScreen(
+                portals = portals,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Screen.Home.route)
+                        launchSingleTop = true
+                    }
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.Precio.route) {
+            PrecioScreen()
+        }
+        
+        composable(Screen.Inventario.route) {
+            InventarioScreen()
+        }
+
+        composable(Screen.Mundo.route) {
+            WorldStateScreen()
+        }
+        
+        // El resto se dirige a PlaceholderScreen
+        val placeholderRoutes = listOf(
+            Screen.Plan.route,
+            Screen.Rivens.route,
+            Screen.Baro.route,
+            Screen.Sesiones.route,
+            Screen.Ask.route
+        )
+        
+        placeholderRoutes.forEach { route ->
+            composable(route) {
+                val item = portals.find { it.id == route } ?: tenshinNavItems.first()
+                PlaceholderScreen(item = item)
+            }
+        }
+    }
+}
