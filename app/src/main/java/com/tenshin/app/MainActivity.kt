@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tenshin.app.data.remote.AutoConfig
 import com.tenshin.app.di.NetworkModule
 import com.tenshin.app.navigation.NavGraph
 import com.tenshin.app.navigation.Screen
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleUsbInjectedIp(intent)
         enableEdgeToEdge()
         setContent {
             val inventoryViewModel: InventoryViewModel = viewModel()
@@ -54,6 +56,19 @@ class MainActivity : ComponentActivity() {
             TenshinTheme(isHacked = isHacked) {
                 TenshinApp(inventoryViewModel)
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleUsbInjectedIp(intent)
+    }
+
+    private fun handleUsbInjectedIp(intent: Intent?) {
+        val ip = intent?.getStringExtra("pc_ip") ?: intent?.data?.getQueryParameter("ip")
+        if (ip != null && ip.matches(Regex("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"""))) {
+            AutoConfig.saveIp(this, ip)
+            NetworkModule.setHelperIp(ip)
         }
     }
 }
@@ -164,7 +179,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(90.dp) // Reducido de 110dp para subir el menú
+                            .height(90.dp) 
                             .background(surfaceColor)
                             .drawBehind {
                                 drawLine(
@@ -177,7 +192,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                             .statusBarsPadding(),
                     ) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically, // Cambiado de Bottom a CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier
                                 .fillMaxSize()

@@ -1,4 +1,4 @@
-#Tue Mar 17 08:00:18 ART 2026
+#Tue Mar 17 08:37:16 ART 2026
 base.0=C\:\\TENSHIN-APP\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\TENSHIN-APP\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.10=C\:\\TENSHIN-APP\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\9\\classes.dex

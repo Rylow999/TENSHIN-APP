@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 
@@ -47,7 +46,8 @@ class NetworkDiscovery(private val context: Context) {
     private fun isPortOpen(ip: String, port: Int): Boolean {
         return try {
             Socket().use { socket ->
-                socket.connect(InetSocketAddress(ip, port), 80) // Timeout más agresivo para fluidez
+                // Aumentado timeout a 500ms para mayor fiabilidad en redes inestables
+                socket.connect(InetSocketAddress(ip, port), 500)
                 true
             }
         } catch (e: Exception) {

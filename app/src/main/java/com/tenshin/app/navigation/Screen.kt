@@ -18,7 +18,7 @@ sealed class Screen(val route: String) {
     object Rivens      : Screen("rivens")
     object Baro        : Screen("baro")
     object Sesiones    : Screen("sesiones")
-    object Mundo       : Screen("mundo")
+    object Sistema     : Screen("sistema")
     object Soporte     : Screen("soporte")
 }
 
@@ -45,8 +45,8 @@ val tenshinNavItems = listOf(
         stats = null,
     ),
     NavItem(
-        id = "mundo", icon = "public", label = "Estado del Mundo", color = ColorAccent,
-        summary = "Ciclos de día/noche, pesca y minería en los mundos abiertos de Warframe.",
+        id = "sistema", icon = "public", label = "Estado del Sistema", color = ColorAccent,
+        summary = "Ciclos de día/noche, invasiones, fisuras y alertas activas en el Sistema Origen.",
         stats = listOf(NavStat("Cetus", "Día"), NavStat("Vallis", "Frío")),
     ),
     NavItem(

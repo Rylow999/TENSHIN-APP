@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tenshin.app.ui.screens.*
 import com.tenshin.app.ui.viewmodel.InventoryViewModel
+import com.tenshin.app.ui.viewmodel.SistemaViewModel
 
 @Composable
 fun NavGraph(
@@ -51,8 +52,8 @@ fun NavGraph(
             InventarioScreen()
         }
 
-        composable(Screen.Mundo.route) {
-            WorldStateScreen()
+        composable(Screen.Sistema.route) {
+            SistemaScreen()
         }
 
         composable(Screen.Soporte.route) {
@@ -67,7 +68,6 @@ fun NavGraph(
             BaroScreen()
         }
         
-        // Placeholder routes for screens not yet fully implemented
         val placeholderRoutes = listOf(
             Screen.Rivens.route,
             Screen.Sesiones.route

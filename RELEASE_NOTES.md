@@ -1,36 +1,20 @@
-# 🚀 Release: v1.1.3 — The Void Trader Update
+# 🛰️ Release v1.1.4 — Origin System Intelligence
 
-**Nombre de la Release:** `v1.1.3 - Smart Sync & Baro Ki'Teer`
+Esta versión transforma a **Tenshin** en una herramienta proactiva, analizando tu arsenal en tiempo real para darte directivas precisas.
 
-## 📝 Descripción de los cambios
+### 🧠 Inteligencia y Sincronización (Prioridad 1)
+- **Sincronización Crítica:** El flujo de inicio ahora obliga/guía al usuario a sincronizar para activar la inteligencia de la app.
+- **Caché Local:** Se implementó persistencia con `SharedPreferences`. Tus datos están disponibles al instante, incluso offline.
 
-Esta versión marca un hito en la estabilidad y funcionalidad de **Tenshin**, introduciendo la integración de datos en tiempo real y una experiencia de sincronización mucho más fluida.
+### ⚔️ Directivas de Combate
+- **Invasiones Inteligentes:** La app detecta recompensas que NO tienes en tu inventario y las marca como **"¡NECESARIAS!"**.
+- **Fisuras del Vacío:** Estructura preparada para recomendar la apertura de reliquias basadas en tus sets incompletos.
+- **Estado del Mundo Pro:** Ciclos de todos los mundos abiertos (incluyendo Zariman) con recomendaciones dinámicas.
 
-### 🔄 Sincronización Inteligente (Smart Sync)
-*   **Auto-Discovery:** La aplicación ahora es capaz de escanear tu red local para encontrar automáticamente la IP de tu PC ejecutando el *Warframe Helper*. Ya no es estrictamente necesario configurar la IP manualmente.
-*   **Feedback en Tiempo Real:** Se ha implementado un sistema de **Snackbars** y estados visuales en el botón de Sync para informar sobre errores de conexión o progreso de la carga.
+### 💰 Mercado en Vivo
+- **Live Orders:** Búsqueda real en `warframe.market` filtrando solo jugadores "Ingame" para tradeos rápidos.
+- **Limpieza de Datos:** Eliminados todos los ítems de prueba (hardcoded).
 
-### 👤 Baro Ki'Teer (Comerciante del Vacío)
-*   **Pantalla Completa:** Nueva interfaz premium para Baro Ki'Teer.
-*   **Datos Reales:** Integración con la API de *WarframeStat* para mostrar la ubicación exacta, el tiempo de llegada/partida y el inventario actual (o estimado si no está presente).
-*   **Recomendaciones:** Etiquetas dinámicas (`INDISPENSABLE`, `ESPECIAL`) para ayudarte a decidir en qué gastar tus ducados.
-
-### 🛠️ Correcciones y Mejoras
-*   **Fix Crítico de Compilación:** Se solucionó un error en el `NavGraph.kt` que impedía generar el APK debido a parámetros de navegación obsoletos.
-*   **Optimización de Red:** Se incrementaron los timeouts para mejorar la compatibilidad con redes Wi-Fi inestables.
-*   **Actualización de Versión:** Incremento a `versionCode 5` para asegurar la correcta actualización sobre versiones instaladas.
-
----
-
-## 📦 Información del APK
-
-*   **Archivo:** `app-debug.apk`
-*   **Versión:** `1.1.3 (5)`
-*   **Estado:** Compilación verificada exitosamente.
-
----
-
-### 💡 Instrucciones de uso para la Sincronización:
-1. Conecta tu móvil a la misma red Wi-Fi que tu PC.
-2. Abre la app y presiona el botón **"⟳ sync"** en la barra superior.
-3. Tenshin buscará tu PC automáticamente y traerá tu arsenal actualizado.
+### 📟 Estética y Navegación
+- **Modo 1999 (Hacked):** Unificación total de colores y temas para el modo Höllvania.
+- **Ergonomía:** Menú hamburguesa elevado y redimensionado para mayor comodidad.
