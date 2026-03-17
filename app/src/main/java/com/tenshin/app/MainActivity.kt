@@ -1,5 +1,7 @@
 package com.tenshin.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -14,6 +16,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,10 +70,13 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     LaunchedEffect(isHacked) {
         if (isHacked) {
             val vibrator = context.getSystemService(Vibrator::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200, 50, 400), -1))
-            } else {
-                vibrator.vibrate(500)
+            if (vibrator != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200, 50, 400), -1))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(500)
+                }
             }
         }
     }
@@ -102,7 +109,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = surfaceColor,
-                modifier = Modifier.width(260.dp),
+                modifier = Modifier.width(280.dp),
             ) {
                 DrawerContent(
                     items      = tenshinNavItems,
@@ -115,6 +122,27 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                         }
                     },
                 )
+                
+                Spacer(Modifier.weight(1f))
+                
+                TextButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:support@tenshin.app")
+                            putExtra(Intent.EXTRA_SUBJECT, "Tenshin App Error Report")
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            // Handle case where no email app is installed
+                        }
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Report Error", fontSize = 12.sp)
+                }
             }
         },
     ) {
@@ -124,7 +152,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(110.dp) 
                         .background(surfaceColor)
                         .drawBehind {
                             drawLine(
@@ -134,25 +162,27 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                                 strokeWidth = 1.dp.toPx()
                             )
                         }
-                        .padding(horizontal = 16.dp),
+                        .statusBarsPadding(),
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                     ) {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier
                                 .clickable { scope.launch { drawerState.open() } }
-                                .padding(4.dp),
+                                .padding(8.dp),
                         ) {
-                            listOf(20f, 14f, 20f).forEach { width ->
+                            listOf(24f, 16f, 24f).forEach { width ->
                                 Box(
                                     Modifier
                                         .width(width.dp)
-                                        .height(2.dp)
-                                        .background(primaryColor, RoundedCornerShape(1.dp))
+                                        .height(2.5.dp)
+                                        .background(primaryColor, RoundedCornerShape(1.2.dp))
                                 )
                             }
                         }
@@ -160,30 +190,29 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                         Column(Modifier.weight(1f)) {
                             Text(
                                 text          = if (isHacked) "HÖLLVANIA 1999" else "TENSHIN",
-                                fontSize      = 11.sp,
+                                fontSize      = 12.sp,
                                 color         = primaryColor.copy(alpha = 0.7f),
-                                letterSpacing = 2.sp,
-                                lineHeight    = 11.sp,
+                                letterSpacing = 3.sp,
+                                fontWeight = FontWeight.Bold,
                                 fontFamily    = if (isHacked) FontFamily.Monospace else FontFamily.Default
                             )
                             Text(
                                 text       = activeItem?.label ?: "Inicio",
-                                fontSize   = 13.sp,
+                                fontSize   = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color      = onSurfaceColor,
-                                lineHeight = 17.sp,
                             )
                         }
 
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .background(syncBg, RoundedCornerShape(8.dp))
+                                .background(syncBg, RoundedCornerShape(12.dp))
                                 .drawBehind {
                                     drawRoundRect(
-                                        color        = primaryColor.copy(alpha = 0.27f),
-                                        cornerRadius = CornerRadius(8.dp.toPx()),
-                                        style        = Stroke(width = 1.dp.toPx()),
+                                        color        = primaryColor.copy(alpha = 0.4f),
+                                        cornerRadius = CornerRadius(12.dp.toPx()),
+                                        style        = Stroke(width = 1.5.dp.toPx()),
                                     )
                                 }
                                 .clickable {
@@ -194,12 +223,13 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                                         syncPulse = false
                                     }
                                 }
-                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) {
                             Text(
                                 text = if (isHacked) "SYS_SYNC" else "⟳ sync",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 color = primaryColor,
+                                fontWeight = FontWeight.ExtraBold,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -210,8 +240,7 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
+                    .padding(innerPadding),
             ) {
                 NavGraph(
                     navController = navController,

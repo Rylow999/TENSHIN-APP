@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Outer Diamond (Entrati Style) -->
+    <path
+        android:pathData="M50,10 L85,50 L50,90 L15,50 Z"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+    <!-- Inner Core -->
+    <path
+        android:pathData="M50,25 L70,50 L50,75 L30,50 Z"
+        android:fillColor="#00E5CC" />
+    <!-- Glitch lines -->
+    <path
+        android:pathData="M20,45 H40 M60,55 H80"
+        android:strokeWidth="1"
+        android:strokeColor="#00E5CC"
+        android:alpha="0.6" />
+</vector>

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.valentinilk.shimmer.shimmer
 import com.tenshin.app.ui.theme.*
 
 // ══════════════════════════════════════════
@@ -67,10 +68,10 @@ fun ItemCard(
     selected:   Boolean,
     onSelect:   () -> Unit,
     modifier:   Modifier = Modifier,
+    isLoading:  Boolean = false
 ) {
     val trendColor = item.trendColor()
 
-    // animateColorAsState — equivalente a "transition: background 0.2s"
     val bgColor by animateColorAsState(
         targetValue   = if (selected) ColorSurfaceElevated else ColorSurface,
         animationSpec = spring(),
@@ -86,8 +87,8 @@ fun ItemCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
+            .then(if (isLoading) Modifier.shimmer() else Modifier)
             .drawBehind {
-                // Borde custom con el color animado
                 drawRoundRect(
                     color        = borderColor,
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
@@ -98,7 +99,6 @@ fun ItemCard(
             .clickable { onSelect() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
-        // Barra de acento izquierda cuando está seleccionado
         if (selected) {
             Box(
                 Modifier
@@ -115,7 +115,6 @@ fun ItemCard(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                // Nombre + emoji precio + badge de rank
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(item.priceEmoji(), fontSize = 13.sp)
                     Text(
@@ -138,7 +137,6 @@ fun ItemCard(
 
                 Spacer(Modifier.height(4.dp))
 
-                // Precio + badge de tendencia
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text       = "${item.price}p",
@@ -172,7 +170,6 @@ fun ItemCard(
 
             Spacer(Modifier.width(12.dp))
 
-            // Mini chart
             MiniChart(
                 data     = item.history,
                 color    = trendColor,
