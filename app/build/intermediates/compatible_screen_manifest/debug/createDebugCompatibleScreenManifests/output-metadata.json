@@ -4,7 +4,7 @@
     "type": "COMPATIBLE_SCREEN_MANIFEST",
     "kind": "Directory"
   },
-  "applicationId": "com.tenshin.app",
+  "applicationId": "com.tenshin.app.debug",
   "variantName": "debug",
   "elements": []
 }

@@ -1,8 +1,8 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-3    package="com.tenshin.app"
-4    android:versionCode="1"
-5    android:versionName="1.0" >
+3    package="com.tenshin.app.debug"
+4    android:versionCode="2"
+5    android:versionName="1.1.0-DEBUG" >
 6
 7    <uses-sdk
 8        android:minSdkVersion="26"
@@ -20,12 +20,12 @@
 14
 15    <permission
 15-->[androidx.core:core:1.15.0] C:\Users\rylow\.gradle\caches\8.13\transforms\c6d92ad9ef32594cb0c53a1a15e3242e\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
-16        android:name="com.tenshin.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+16        android:name="com.tenshin.app.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
 16-->[androidx.core:core:1.15.0] C:\Users\rylow\.gradle\caches\8.13\transforms\c6d92ad9ef32594cb0c53a1a15e3242e\transformed\core-1.15.0\AndroidManifest.xml:23:9-81
 17        android:protectionLevel="signature" />
 17-->[androidx.core:core:1.15.0] C:\Users\rylow\.gradle\caches\8.13\transforms\c6d92ad9ef32594cb0c53a1a15e3242e\transformed\core-1.15.0\AndroidManifest.xml:24:9-44
 18
-19    <uses-permission android:name="com.tenshin.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+19    <uses-permission android:name="com.tenshin.app.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 19-->[androidx.core:core:1.15.0] C:\Users\rylow\.gradle\caches\8.13\transforms\c6d92ad9ef32594cb0c53a1a15e3242e\transformed\core-1.15.0\AndroidManifest.xml:26:5-97
 19-->[androidx.core:core:1.15.0] C:\Users\rylow\.gradle\caches\8.13\transforms\c6d92ad9ef32594cb0c53a1a15e3242e\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
 20
@@ -75,7 +75,7 @@
 44-->[androidx.emoji2:emoji2:1.3.0] C:\Users\rylow\.gradle\caches\8.13\transforms\1e0538820a8144f21de8cb11ec17c6f6\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
 45            android:name="androidx.startup.InitializationProvider"
 45-->[androidx.emoji2:emoji2:1.3.0] C:\Users\rylow\.gradle\caches\8.13\transforms\1e0538820a8144f21de8cb11ec17c6f6\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
-46            android:authorities="com.tenshin.app.androidx-startup"
+46            android:authorities="com.tenshin.app.debug.androidx-startup"
 46-->[androidx.emoji2:emoji2:1.3.0] C:\Users\rylow\.gradle\caches\8.13\transforms\1e0538820a8144f21de8cb11ec17c6f6\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
 47            android:exported="false" >
 47-->[androidx.emoji2:emoji2:1.3.0] C:\Users\rylow\.gradle\caches\8.13\transforms\1e0538820a8144f21de8cb11ec17c6f6\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37

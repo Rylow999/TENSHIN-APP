@@ -17,7 +17,6 @@ sealed class Screen(val route: String) {
     object Rivens      : Screen("rivens")
     object Baro        : Screen("baro")
     object Sesiones    : Screen("sesiones")
-    object Ask         : Screen("ask")
     object Mundo       : Screen("mundo")
     object Soporte     : Screen("soporte")
 }
@@ -52,37 +51,32 @@ val tenshinNavItems = listOf(
     NavItem(
         id = "precio", icon = "precio", label = "Precio / Tendencia", color = ColorAccent,
         summary = "Consulta precios en tiempo real y el historial de 90 días de cualquier ítem en warframe.market.",
-        stats = listOf(NavStat("Ítems WFM", "29"), NavStat("En alza", "3")),
+        stats = listOf(NavStat("Ítems WFM", "?"), NavStat("En alza", "?")),
     ),
     NavItem(
         id = "inventario", icon = "inventario", label = "Inventario", color = ColorGold,
         summary = "Estado del arsenal con precio × cantidad real. Valor total estimado del inventario sincronizado.",
-        stats = listOf(NavStat("Arsenal", "~228p"), NavStat("~\$3 USD", "")),
+        stats = listOf(NavStat("Arsenal", "Desconocido"), NavStat("? USD", "")),
     ),
     NavItem(
         id = "plan", icon = "plan", label = "Plan del día", color = ColorGreen,
         summary = "Directiva diaria personalizada: qué soltar, dónde farmear y movimientos del mercado a aprovechar.",
-        stats = listOf(NavStat("Sync", "15/03")),
+        stats = listOf(NavStat("Sync", "No")),
     ),
     NavItem(
         id = "rivens", icon = "rivens", label = "Rivens", color = ColorRiven,
         summary = "Análisis de Rivens con veredicto (soltar / refundir / guardar) y precio sugerido según disposición.",
-        stats = listOf(NavStat("Rivens", "16"), NavStat("Velados", "3")),
+        stats = listOf(NavStat("Rivens", "?"), NavStat("Velados", "?")),
     ),
     NavItem(
         id = "baro", icon = "baro", label = "Baro Ki'Teer", color = ColorGold,
         summary = "Estado del Comerciante del Vacío: ubicación, inventario completo y análisis de qué comprar.",
-        stats = listOf(NavStat("Estado", "En ruta"), NavStat("Llega en", "5d 13h")),
+        stats = listOf(NavStat("Estado", "?"), NavStat("Llega en", "?")),
     ),
     NavItem(
         id = "sesiones", icon = "sesiones", label = "Sesiones", color = ColorGreen,
         summary = "Registro de operaciones con duración, actividad y Platinum estimado. Análisis de rendimiento.",
-        stats = listOf(NavStat("Sesiones", "12"), NavStat("~4h jugadas", "")),
-    ),
-    NavItem(
-        id = "ask", icon = "ask", label = "Consultar al espectro", color = ColorRiven,
-        summary = "Consulta libre al espectro sobre cualquier aspecto del mercado, Rivens, builds o estrategia.",
-        stats = null,
+        stats = listOf(NavStat("Sesiones", "0"), NavStat("0h jugadas", "")),
     ),
     NavItem(
         id = "soporte", icon = "favorite", label = "Apoyar el Proyecto", color = ColorGold,

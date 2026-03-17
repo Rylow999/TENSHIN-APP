@@ -6,10 +6,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tenshin.app.ui.screens.*
 
-// ══════════════════════════════════════════
-//  NavGraph
-//  → NavHost wiring para las pantallas de Tenshin
-// ══════════════════════════════════════════
 @Composable
 fun NavGraph(
     navController: NavHostController,
@@ -45,14 +41,17 @@ fun NavGraph(
         composable(Screen.Mundo.route) {
             WorldStateScreen()
         }
+
+        composable(Screen.Soporte.route) {
+            SoporteScreen()
+        }
         
-        // El resto se dirige a PlaceholderScreen
+        // Placeholder routes for screens not yet fully implemented
         val placeholderRoutes = listOf(
             Screen.Plan.route,
             Screen.Rivens.route,
             Screen.Baro.route,
-            Screen.Sesiones.route,
-            Screen.Ask.route
+            Screen.Sesiones.route
         )
         
         placeholderRoutes.forEach { route ->
