@@ -1,10 +1,14 @@
 package com.tenshin.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tenshin.app.data.model.Inventory
+import com.tenshin.app.data.remote.AutoConfig
+import com.tenshin.app.data.remote.NetworkDiscovery
 import com.tenshin.app.data.repository.WarframeRepository
 import com.tenshin.app.di.NetworkModule
 import kotlinx.coroutines.delay
@@ -15,17 +19,22 @@ import kotlinx.coroutines.launch
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 sealed interface InventoryUiState {
     object Idle : InventoryUiState
-    object Syncing : InventoryUiState
-    data class Success(val inventory: Inventory, val isRealTime: Boolean = false) : InventoryUiState
+    data class Syncing(val step: Int) : InventoryUiState
+    data class Success(val inventory: Inventory, val isRealTime: Boolean = false, val lastSyncDate: String = "") : InventoryUiState
     data class Error(val message: String) : InventoryUiState
 }
 
-class InventoryViewModel(
-    private val repository: WarframeRepository = WarframeRepository()
-) : ViewModel() {
+class InventoryViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = WarframeRepository()
+    private val discovery = NetworkDiscovery(application)
+    private val sharedPrefs = application.getSharedPreferences("tenshin_prefs", Context.MODE_PRIVATE)
+    private val gson = Gson()
 
     private val _uiState = MutableStateFlow<InventoryUiState>(InventoryUiState.Idle)
     val uiState: StateFlow<InventoryUiState> = _uiState.asStateFlow()
@@ -34,18 +43,59 @@ class InventoryViewModel(
     val isHacked: StateFlow<Boolean> = _isHacked.asStateFlow()
 
     private var webSocket: WebSocket? = null
-    private val gson = Gson()
+
+    init {
+        loadCachedInventory()
+    }
+
+    private fun loadCachedInventory() {
+        val cachedJson = sharedPrefs.getString("cached_inventory", null)
+        val lastDate = sharedPrefs.getString("last_sync_date", "Nunca") ?: "Nunca"
+        if (cachedJson != null) {
+            try {
+                val inventory = gson.fromJson(cachedJson, Inventory::class.java)
+                _uiState.value = InventoryUiState.Success(inventory, lastSyncDate = lastDate)
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun setHelperConfig(ip: String, httpPort: Int, wsPort: Int) {
+        AutoConfig.saveIp(getApplication(), ip)
+        NetworkModule.setHelperConfig(ip, httpPort, wsPort)
+        syncInventory()
+    }
 
     fun syncInventory() {
         viewModelScope.launch {
-            _uiState.value = InventoryUiState.Syncing
+            _uiState.value = InventoryUiState.Syncing(1)
+            
+            if (NetworkModule.getHelperIp() == null) {
+                val discoveredIp = discovery.discoverHelperIp()
+                if (discoveredIp != null) {
+                    NetworkModule.setHelperConfig(discoveredIp)
+                    AutoConfig.saveIp(getApplication(), discoveredIp)
+                } else {
+                    _uiState.value = InventoryUiState.Error("PC no encontrada. Verifica el Helper o ingresa la IP.")
+                    return@launch
+                }
+            }
+
+            _uiState.value = InventoryUiState.Syncing(2)
             repository.syncInventory()
                 .onSuccess { inventory ->
-                    _uiState.value = InventoryUiState.Success(inventory)
+                    val now = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date())
+                    _uiState.value = InventoryUiState.Success(inventory, lastSyncDate = now)
+                    
+                    val json = gson.toJson(inventory)
+                    sharedPrefs.edit()
+                        .putString("cached_inventory", json)
+                        .putString("last_sync_date", now)
+                        .apply()
+                    
                     startRealTimeSync()
                 }
                 .onFailure { error ->
-                    _uiState.value = InventoryUiState.Error(error.message ?: "Sync failed")
+                    _uiState.value = InventoryUiState.Error("Fallo de red: ${error.localizedMessage}")
                 }
         }
     }
@@ -67,35 +117,24 @@ class InventoryViewModel(
                         "inventory", "inventory_update" -> {
                             val payload = json.get("payload")
                             val inventory = gson.fromJson(payload, Inventory::class.java)
-                            _uiState.value = InventoryUiState.Success(inventory, isRealTime = true)
+                            val now = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date())
+                            _uiState.value = InventoryUiState.Success(inventory, isRealTime = true, lastSyncDate = now)
                             
-                            // Si acabamos de recibir el inventario y estábamos en modo hacked, volver a la normalidad tras un breve delay
                             if (_isHacked.value) {
                                 viewModelScope.launch {
-                                    delay(3000) // Mantener el efecto 3 segundos después de la sync
+                                    delay(3000)
                                     _isHacked.value = false
                                 }
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    // Log error
-                }
+                } catch (e: Exception) { }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 _isHacked.value = false
             }
         })
-    }
-
-    fun uploadInventory(inventory: Inventory) {
-        viewModelScope.launch {
-            repository.backupInventory(inventory)
-                .onFailure { error ->
-                    _uiState.value = InventoryUiState.Error(error.message ?: "Upload failed")
-                }
-        }
     }
 
     override fun onCleared() {

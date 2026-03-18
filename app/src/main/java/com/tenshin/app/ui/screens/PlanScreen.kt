@@ -20,19 +20,25 @@ import com.tenshin.app.ui.theme.ColorAccent
 import com.tenshin.app.ui.theme.ColorGold
 import com.tenshin.app.ui.viewmodel.PlanUiState
 import com.tenshin.app.ui.viewmodel.PlanViewModel
+import com.tenshin.app.ui.viewmodel.PlanObjective
+import com.tenshin.app.ui.viewmodel.InventoryViewModel
+import com.tenshin.app.ui.viewmodel.InventoryUiState
 
 @Composable
 fun PlanScreen(
-    viewModel: PlanViewModel = viewModel()
+    viewModel: PlanViewModel = viewModel(),
+    inventoryViewModel: InventoryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val invState by inventoryViewModel.uiState.collectAsState()
 
-    // Simulamos carga de datos para el prompt
-    LaunchedEffect(Unit) {
-        viewModel.generateDailyPlan(
-            inventoryData = "Excalibur Prime, 500 Platinum, Orokin Cells x10",
-            marketTrends = "Glaive Prime en alza, Arcanos estables"
-        )
+    LaunchedEffect(invState) {
+        if (uiState is PlanUiState.Idle && invState is InventoryUiState.Success) {
+            viewModel.generateDailyPlan(
+                inventory = (invState as InventoryUiState.Success).inventory.items,
+                objective = PlanObjective.OPTIMIZE
+            )
+        }
     }
 
     Column(
@@ -49,6 +55,11 @@ fun PlanScreen(
         )
 
         when (val state = uiState) {
+            is PlanUiState.Idle -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Iniciando consulta al Vacío...", color = ColorAccent)
+                }
+            }
             is PlanUiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = ColorAccent)
@@ -82,7 +93,11 @@ fun PlanScreen(
                     color = Color.Red,
                     modifier = Modifier.padding(16.dp)
                 )
-                Button(onClick = { viewModel.generateDailyPlan("...", "...") }) {
+                Button(onClick = { 
+                    if (invState is InventoryUiState.Success) {
+                        viewModel.generateDailyPlan((invState as InventoryUiState.Success).inventory.items, PlanObjective.OPTIMIZE) 
+                    }
+                }) {
                     Text("Reintentar")
                 }
             }

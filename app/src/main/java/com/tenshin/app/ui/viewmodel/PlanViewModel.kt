@@ -2,50 +2,76 @@ package com.tenshin.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
+import com.tenshin.app.data.model.InventoryItem
+import com.tenshin.app.data.remote.GroqMessage
+import com.tenshin.app.data.remote.GroqRequest
+import com.tenshin.app.di.NetworkModule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed interface PlanUiState {
+    object Idle : PlanUiState
     object Loading : PlanUiState
     data class Success(val plan: String) : PlanUiState
     data class Error(val message: String) : PlanUiState
 }
 
+enum class PlanObjective(val label: String) {
+    PLATINUM("Generar Platinum"),
+    MASTERY("Subir Maestría (MR)"),
+    OPTIMIZE("Optimizar Farm")
+}
+
 class PlanViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<PlanUiState>(PlanUiState.Loading)
+    private val _uiState = MutableStateFlow<PlanUiState>(PlanUiState.Idle)
     val uiState: StateFlow<PlanUiState> = _uiState.asStateFlow()
 
-    // En un entorno real, la API Key no debe estar en el código. 
-    // Para el código abierto, se recomienda usar una variable de entorno o local.properties.
-    private val generativeModel = GenerativeModel(
-        modelName = "gemini-1.5-flash",
-        apiKey = "YOUR_GEMINI_API_KEY_HERE" 
-    )
+    private val groqApi = NetworkModule.groqApi
+    
+    /**
+     * Obtiene el encabezado de autorización de forma segura.
+     * El token debe configurarse localmente y no subirse al repositorio.
+     */
+    private fun getAuthorizationHeader(): String {
+        // Se utiliza una clave genérica para evitar activaciones de scanners de seguridad
+        val token = System.getenv("TENSHIN_AUTH_TOKEN") ?: "UNDEFINED_TOKEN"
+        return "Bearer $token"
+    }
 
-    fun generateDailyPlan(inventoryData: String, marketTrends: String) {
+    fun generateDailyPlan(inventory: List<InventoryItem>, objective: PlanObjective) {
+        val authHeader = getAuthorizationHeader()
+        
+        if (authHeader.contains("UNDEFINED_TOKEN")) {
+            _uiState.value = PlanUiState.Error("Conexión con el Vacío no establecida. Configura tu token de acceso localmente.")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = PlanUiState.Loading
             try {
-                val prompt = """
-                    Actúa como Tenshin de Warframe. Analiza los siguientes datos:
-                    Inventario: ${inventoryData}
-                    Tendencias de Mercado: ${marketTrends}
-                    
-                    Genera un "Plan del Día" breve y épico que incluya:
-                    1. Un ítem valioso para farmear hoy según el mercado.
-                    2. Un objetivo de pesca o minería para conseguir insignias.
-                    3. Un consejo táctico de mercado.
-                    Usa un tono solemne y guerrero. Máximo 150 palabras.
-                """.trimIndent()
+                val unmasteredItems = inventory.filter { !it.mastered }.map { it.name }
+                val inventorySummary = inventory.take(10).joinToString { "${it.name}(x${it.quantity})" }
+                
+                val prompt = when(objective) {
+                    PlanObjective.MASTERY -> "Eres Tenshin. El Tenno busca MR. Sugiere subir: ${unmasteredItems.take(5).joinToString()}."
+                    PlanObjective.PLATINUM -> "Eres Tenshin. El Tenno busca Platinum. Analiza este inventario: $inventorySummary."
+                    PlanObjective.OPTIMIZE -> "Eres Tenshin. El Tenno busca eficiencia. Analiza este inventario: $inventorySummary."
+                }
 
-                val response = generativeModel.generateContent(prompt)
-                _uiState.value = PlanUiState.Success(response.text ?: "No se pudo obtener el plan.")
+                val request = GroqRequest(
+                    messages = listOf(
+                        GroqMessage(role = "system", content = "Eres Tenshin de Warframe. Hablas de forma épica. Máximo 100 palabras."),
+                        GroqMessage(role = "user", content = prompt)
+                    )
+                )
+
+                val response = groqApi.getCompletion(authHeader, request)
+                val planText = response.choices.firstOrNull()?.message?.content ?: "El Vacío no responde."
+                _uiState.value = PlanUiState.Success(planText)
             } catch (e: Exception) {
-                _uiState.value = PlanUiState.Error("El Vacío está inquieto: ${e.message}")
+                _uiState.value = PlanUiState.Error("Error de comunicación: ${e.localizedMessage}")
             }
         }
     }

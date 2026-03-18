@@ -4,8 +4,9 @@
 /local.properties
 /.idea
 .DS_Store
-/build
-/captures
+build/
+app/build/
+captures/
 .externalNativeBuild
 .cxx
 local.properties
@@ -17,12 +18,12 @@ __pycache__/
 dist/
 build/
 *.spec
-venv/
-.venv/
 
-# Binaries
-*.exe
+# Binaries & Secrets
 *.apk
+*.exe
+*.ico
 server_ip.txt
 inventory.json
 warframe-api-helper.exe
+secrets.properties

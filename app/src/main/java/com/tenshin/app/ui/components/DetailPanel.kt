@@ -31,13 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tenshin.app.ui.theme.*
 
-// ══════════════════════════════════════════
-//  DetailPanel
-//  → AnimatedVisibility(expandVertically + fadeIn)
-//    Canvas para el Chart grande con área de gradiente
-//    Stats en Row con 3 Cards (Máximo / Promedio / Mínimo)
-//    Bloque de análisis del espectro
-// ══════════════════════════════════════════
 @Composable
 fun DetailPanel(
     item:      MarketItem?,
@@ -61,10 +54,9 @@ fun DetailPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp)
-                .background(ColorSurfaceElevated, RoundedCornerShape(16.dp))
+                .background(color = ColorSurfaceElevated, shape = RoundedCornerShape(16.dp))
                 .padding(16.dp),
         ) {
-            // ── Header: nombre + precio + botón cerrar ──
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment     = Alignment.Top,
@@ -86,12 +78,11 @@ fun DetailPanel(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Chart grande con gradiente de área ──
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(ColorBg, RoundedCornerShape(10.dp))
+                    .background(color = ColorBg, shape = RoundedCornerShape(10.dp))
                     .padding(horizontal = 8.dp, vertical = 10.dp),
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -102,19 +93,16 @@ fun DetailPanel(
                     fun xOf(i: Int) = (i.toFloat() / (count - 1)) * w
                     fun yOf(v: Float) = h - ((v - minV) / range) * (h - 10f) - 5f
 
-                    // Path de la línea
                     val linePath = Path()
                     item.history.forEachIndexed { i, v ->
                         if (i == 0) linePath.moveTo(xOf(i), yOf(v))
                         else linePath.lineTo(xOf(i), yOf(v))
                     }
 
-                    // Path del área (línea + cierre inferior)
                     val areaPath = Path()
                     areaPath.addPath(linePath)
                     areaPath.lineTo(w, h); areaPath.lineTo(0f, h); areaPath.close()
 
-                    // Gradiente vertical
                     drawPath(
                         path = areaPath,
                         brush = Brush.verticalGradient(
@@ -122,20 +110,17 @@ fun DetailPanel(
                         ),
                     )
 
-                    // Línea
                     drawPath(
                         path  = linePath,
                         color = trendColor,
                         style = Stroke(width = 2f, cap = StrokeCap.Round, join = StrokeJoin.Round),
                     )
 
-                    // Punto final
                     val lastIdx = count - 1
                     drawCircle(trendColor, radius = 4f, center = Offset(xOf(lastIdx), yOf(item.history.last())))
                 }
             }
 
-            // Etiquetas eje X
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 12.dp),
@@ -145,7 +130,6 @@ fun DetailPanel(
                 }
             }
 
-            // ── Stats: Máximo / Promedio / Mínimo ──
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
@@ -159,7 +143,7 @@ fun DetailPanel(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .weight(1f)
-                            .background(ColorBg, RoundedCornerShape(8.dp))
+                            .background(color = ColorBg, shape = RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 8.dp),
                     ) {
                         Text(label,  fontSize = 9.sp,  color = ColorTextDim,  letterSpacing = 1.sp, textAlign = TextAlign.Center)
@@ -169,7 +153,6 @@ fun DetailPanel(
                 }
             }
 
-            // ── Análisis del espectro ──
             val spectrumText = when (item.trend) {
                 "UP"   -> "Las corrientes del Relé favorecen a ${item.name}. Subió ${item.change}% — momento de soltar, Tenno."
                 "DOWN" -> "Las mareas bajan para ${item.name}. Caída de ${Math.abs(item.change)}% — esperá la marea, Tenno."
@@ -179,7 +162,7 @@ fun DetailPanel(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(ColorBg, RoundedCornerShape(10.dp))
+                    .background(color = ColorBg, shape = RoundedCornerShape(10.dp))
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             ) {
                 Text("🔮", fontSize = 16.sp)

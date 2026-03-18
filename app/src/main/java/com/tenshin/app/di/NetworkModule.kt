@@ -1,10 +1,7 @@
 package com.tenshin.app.di
 
 import android.content.Context
-import com.tenshin.app.data.remote.ApiService
-import com.tenshin.app.data.remote.AutoConfig
-import com.tenshin.app.data.remote.WarframeMarketApi
-import com.tenshin.app.data.remote.WarframeHelperApi
+import com.tenshin.app.data.remote.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -17,11 +14,15 @@ import java.util.concurrent.TimeUnit
 object NetworkModule {
     private const val PLACEHOLDER_URL = "https://jsonplaceholder.typicode.com/"
     private const val WFM_API_URL = "https://api.warframe.market/v1/"
+    private const val WF_STAT_URL = "https://api.warframestat.us/"
+    private const val GROQ_API_URL = "https://api.groq.com/openai/"
     
     @Volatile
-    private var helperBaseUrl: String? = null
-    @Volatile
     private var helperIp: String? = null
+    @Volatile
+    private var httpPort: Int = 8080
+    @Volatile
+    private var wsPort: Int = 8081
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -29,7 +30,7 @@ object NetworkModule {
 
     val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(2, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS) 
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
@@ -41,28 +42,38 @@ object NetworkModule {
         createRetrofit(WFM_API_URL).create(WarframeMarketApi::class.java)
     }
 
-    fun setHelperIp(ip: String) {
-        helperIp = ip
-        helperBaseUrl = "http://$ip:8080/"
+    val warframeStatApi: WarframeStatApi by lazy {
+        createRetrofit(WF_STAT_URL).create(WarframeStatApi::class.java)
+    }
+
+    val groqApi: GroqApi by lazy {
+        createRetrofit(GROQ_API_URL).create(GroqApi::class.java)
+    }
+
+    fun setHelperConfig(ip: String, httpPort: Int = 8080, wsPort: Int = 8081) {
+        this.helperIp = ip
+        this.httpPort = httpPort
+        this.wsPort = wsPort
     }
 
     fun initializeWithInjectedIp(context: Context) {
         AutoConfig.getInjectedIp(context)?.let { ip ->
-            setHelperIp(ip)
+            setHelperConfig(ip)
         }
     }
 
     fun getHelperIp(): String? = helperIp
 
     fun getWarframeHelperApi(): WarframeHelperApi? {
-        val url = helperBaseUrl ?: return null
+        val ip = helperIp ?: return null
+        val url = "http://$ip:$httpPort/"
         return createRetrofit(url).create(WarframeHelperApi::class.java)
     }
 
     fun createWebSocket(listener: WebSocketListener): WebSocket? {
         val ip = helperIp ?: return null
         val request = Request.Builder()
-            .url("ws://$ip:8080/ws")
+            .url("ws://$ip:$wsPort/ws")
             .build()
         return okHttpClient.newWebSocket(request, listener)
     }

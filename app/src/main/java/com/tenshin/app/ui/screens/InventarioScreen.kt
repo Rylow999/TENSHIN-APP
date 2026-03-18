@@ -97,7 +97,7 @@ fun InventarioScreen(
                     val discovery = NetworkDiscovery(context)
                     val ip = discovery.discoverHelperIp()
                     if (ip != null) {
-                        NetworkModule.setHelperIp(ip)
+                        NetworkModule.setHelperConfig(ip)
                         viewModel.syncInventory()
                     }
                 }

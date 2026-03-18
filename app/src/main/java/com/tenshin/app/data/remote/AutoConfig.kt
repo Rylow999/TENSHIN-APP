@@ -18,4 +18,13 @@ object AutoConfig {
             null
         }
     }
+
+    fun saveIp(context: Context, ip: String) {
+        try {
+            val file = File(context.getExternalFilesDir(null), IP_FILENAME)
+            file.writeText(ip)
+        } catch (e: Exception) {
+            // Error al guardar
+        }
+    }
 }

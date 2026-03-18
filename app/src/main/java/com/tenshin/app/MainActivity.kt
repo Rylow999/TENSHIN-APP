@@ -1,5 +1,7 @@
 package com.tenshin.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -12,8 +14,9 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tenshin.app.data.remote.AutoConfig
 import com.tenshin.app.di.NetworkModule
 import com.tenshin.app.navigation.NavGraph
 import com.tenshin.app.navigation.Screen
@@ -36,12 +40,14 @@ import com.tenshin.app.navigation.tenshinNavItems
 import com.tenshin.app.ui.theme.*
 import com.tenshin.app.ui.components.*
 import com.tenshin.app.ui.viewmodel.InventoryViewModel
+import com.tenshin.app.ui.viewmodel.InventoryUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleUsbInjectedIp(intent)
         enableEdgeToEdge()
         setContent {
             val inventoryViewModel: InventoryViewModel = viewModel()
@@ -52,24 +58,52 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleUsbInjectedIp(intent)
+    }
+
+    private fun handleUsbInjectedIp(intent: Intent?) {
+        val ip = intent?.getStringExtra("pc_ip") ?: intent?.data?.getQueryParameter("ip")
+        if (ip != null && ip.matches(Regex("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"""))) {
+            AutoConfig.saveIp(this, ip)
+            // Fix: setHelperIp was renamed or is missing, ensure it matches NetworkModule
+            NetworkModule.setHelperConfig(ip)
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     val drawerState   = rememberDrawerState(DrawerValue.Closed)
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope         = rememberCoroutineScope()
     val navController = rememberNavController()
     val context       = LocalContext.current
     val isHacked by inventoryViewModel.isHacked.collectAsState()
+    val uiState by inventoryViewModel.uiState.collectAsState()
     
+    LaunchedEffect(uiState) {
+        if (uiState is InventoryUiState.Error) {
+            snackbarHostState.showSnackbar(
+                message = (uiState as InventoryUiState.Error).message,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
     LaunchedEffect(isHacked) {
         if (isHacked) {
             val vibrator = context.getSystemService(Vibrator::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200, 50, 400), -1))
-            } else {
-                vibrator.vibrate(500)
+            vibrator?.let {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    it.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200, 50, 400), -1))
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.vibrate(500)
+                }
             }
         }
     }
@@ -79,11 +113,11 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val activeSection = navBackStackEntry?.destination?.route ?: Screen.Home.route
+    val activeRoute = navBackStackEntry?.destination?.route ?: Screen.Sync.route
 
     var syncPulse by remember { mutableStateOf(false) }
 
-    val activeItem = tenshinNavItems.find { it.id == activeSection }
+    val activeItem = tenshinNavItems.find { it.id == activeRoute }
     val portals    = tenshinNavItems.filter { it.id != "home" }
 
     val syncBg by animateColorAsState(
@@ -99,14 +133,15 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
 
     ModalNavigationDrawer(
         drawerState   = drawerState,
+        gesturesEnabled = activeRoute != Screen.Sync.route,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = surfaceColor,
-                modifier = Modifier.width(260.dp),
+                modifier = Modifier.width(280.dp),
             ) {
                 DrawerContent(
                     items      = tenshinNavItems,
-                    activeId   = activeSection,
+                    activeId   = activeRoute,
                     onNavigate = { id ->
                         scope.launch { drawerState.close() }
                         navController.navigate(id) {
@@ -114,94 +149,119 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
                             launchSingleTop = true
                         }
                     },
+                    inventoryViewModel = inventoryViewModel
                 )
+                
+                Spacer(Modifier.weight(1f))
+                
+                TextButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:support@tenshin.app")
+                            putExtra(Intent.EXTRA_SUBJECT, "Tenshin App Error Report")
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) { }
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Report Error", fontSize = 12.sp)
+                }
             }
         },
     ) {
         Scaffold(
             containerColor = backgroundColor,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(surfaceColor)
-                        .drawBehind {
-                            drawLine(
-                                color = if (isHacked) ColorHackerGreen else ColorBorder,
-                                start = androidx.compose.ui.geometry.Offset(0f, size.height),
-                                end = androidx.compose.ui.geometry.Offset(size.width, size.height),
-                                strokeWidth = 1.dp.toPx()
-                            )
-                        }
-                        .padding(horizontal = 16.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(3.dp),
-                            modifier = Modifier
-                                .clickable { scope.launch { drawerState.open() } }
-                                .padding(4.dp),
-                        ) {
-                            listOf(20f, 14f, 20f).forEach { width ->
-                                Box(
-                                    Modifier
-                                        .width(width.dp)
-                                        .height(2.dp)
-                                        .background(primaryColor, RoundedCornerShape(1.dp))
+                if (activeRoute != Screen.Sync.route) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(90.dp) 
+                            .background(surfaceColor)
+                            .drawBehind {
+                                drawLine(
+                                    color = if (isHacked) ColorHackerGreen else ColorBorder,
+                                    start = androidx.compose.ui.geometry.Offset(0f, size.height),
+                                    end = androidx.compose.ui.geometry.Offset(size.width, size.height),
+                                    strokeWidth = 1.dp.toPx()
                                 )
                             }
-                        }
-
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                text          = if (isHacked) "HÖLLVANIA 1999" else "TENSHIN",
-                                fontSize      = 11.sp,
-                                color         = primaryColor.copy(alpha = 0.7f),
-                                letterSpacing = 2.sp,
-                                lineHeight    = 11.sp,
-                                fontFamily    = if (isHacked) FontFamily.Monospace else FontFamily.Default
-                            )
-                            Text(
-                                text       = activeItem?.label ?: "Inicio",
-                                fontSize   = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color      = onSurfaceColor,
-                                lineHeight = 17.sp,
-                            )
-                        }
-
-                        Box(
-                            contentAlignment = Alignment.Center,
+                            .statusBarsPadding(),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier
-                                .background(syncBg, RoundedCornerShape(8.dp))
-                                .drawBehind {
-                                    drawRoundRect(
-                                        color        = primaryColor.copy(alpha = 0.27f),
-                                        cornerRadius = CornerRadius(8.dp.toPx()),
-                                        style        = Stroke(width = 1.dp.toPx()),
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier
+                                    .clickable { scope.launch { drawerState.open() } }
+                                    .padding(8.dp),
+                            ) {
+                                listOf(24f, 16f, 24f).forEach { width ->
+                                    Box(
+                                        Modifier
+                                            .width(width.dp)
+                                            .height(2.5.dp)
+                                            .background(primaryColor, RoundedCornerShape(1.2.dp))
                                     )
                                 }
-                                .clickable {
-                                    syncPulse = true
-                                    inventoryViewModel.syncInventory()
-                                    scope.launch {
-                                        delay(600)
-                                        syncPulse = false
+                            }
+
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text          = if (isHacked) "HÖLLVANIA 1999" else "TENSHIN",
+                                    fontSize      = 10.sp,
+                                    color         = primaryColor.copy(alpha = 0.7f),
+                                    letterSpacing = 2.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily    = if (isHacked) FontFamily.Monospace else FontFamily.Default
+                                )
+                                Text(
+                                    text       = activeItem?.label ?: "Inicio",
+                                    fontSize   = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color      = onSurfaceColor,
+                                )
+                            }
+
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .background(syncBg, RoundedCornerShape(12.dp))
+                                    .drawBehind {
+                                        drawRoundRect(
+                                            color        = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor.copy(alpha = 0.4f),
+                                            cornerRadius = CornerRadius(12.dp.toPx()),
+                                            style        = Stroke(width = 1.5.dp.toPx()),
+                                        )
                                     }
-                                }
-                                .padding(horizontal = 10.dp, vertical = 5.dp),
-                        ) {
-                            Text(
-                                text = if (isHacked) "SYS_SYNC" else "⟳ sync",
-                                fontSize = 11.sp,
-                                color = primaryColor,
-                                fontFamily = FontFamily.Monospace
-                            )
+                                    .clickable(enabled = uiState !is InventoryUiState.Syncing) {
+                                        syncPulse = true
+                                        inventoryViewModel.syncInventory()
+                                        scope.launch {
+                                            delay(600)
+                                            syncPulse = false
+                                        }
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            ) {
+                                Text(
+                                    text = if (uiState is InventoryUiState.Syncing) "..." else (if (isHacked) "SYS_SYNC" else "⟳ sync"),
+                                    fontSize = 11.sp,
+                                    color = if (uiState is InventoryUiState.Syncing) ColorGold else primaryColor,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
                         }
                     }
                 }
@@ -210,12 +270,12 @@ fun TenshinApp(inventoryViewModel: InventoryViewModel) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
+                    .padding(if (activeRoute == Screen.Sync.route) PaddingValues(0.dp) else innerPadding),
             ) {
                 NavGraph(
                     navController = navController,
-                    portals = portals
+                    portals = portals,
+                    inventoryViewModel = inventoryViewModel
                 )
             }
         }

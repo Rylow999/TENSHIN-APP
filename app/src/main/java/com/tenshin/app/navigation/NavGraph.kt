@@ -1,21 +1,36 @@
 package com.tenshin.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tenshin.app.ui.screens.*
+import com.tenshin.app.ui.viewmodel.InventoryViewModel
+import com.tenshin.app.ui.viewmodel.SistemaViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Home.route,
+    startDestination: String = Screen.Sync.route,
     portals: List<NavItem>,
+    inventoryViewModel: InventoryViewModel = viewModel()
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Screen.Sync.route) {
+            SyncScreen(
+                viewModel = inventoryViewModel,
+                onSyncComplete = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Sync.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Screen.Home.route) {
             HomeScreen(
                 portals = portals,
@@ -25,11 +40,10 @@ fun NavGraph(
                         launchSingleTop = true
                     }
                 },
-                onBack = {
-                    navController.popBackStack()
-                }
+                inventoryViewModel = inventoryViewModel
             )
         }
+
         composable(Screen.Precio.route) {
             PrecioScreen()
         }
@@ -38,8 +52,8 @@ fun NavGraph(
             InventarioScreen()
         }
 
-        composable(Screen.Mundo.route) {
-            WorldStateScreen()
+        composable(Screen.Sistema.route) {
+            SistemaScreen()
         }
 
         composable(Screen.Soporte.route) {
@@ -49,11 +63,13 @@ fun NavGraph(
         composable(Screen.Plan.route) {
             PlanScreen()
         }
+
+        composable(Screen.Baro.route) {
+            BaroScreen()
+        }
         
-        // Placeholder routes for screens not yet fully implemented
         val placeholderRoutes = listOf(
             Screen.Rivens.route,
-            Screen.Baro.route,
             Screen.Sesiones.route
         )
         

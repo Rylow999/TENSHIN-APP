@@ -2,15 +2,13 @@ package com.tenshin.app.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,30 +20,26 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.tenshin.app.R
 import com.tenshin.app.navigation.NavItem
 import com.tenshin.app.ui.components.PortalCard
 import com.tenshin.app.ui.theme.*
-import com.tenshin.app.ui.viewmodel.HomeViewModel
-import com.tenshin.app.ui.viewmodel.UiState
+import com.tenshin.app.ui.viewmodel.InventoryUiState
+import com.tenshin.app.ui.viewmodel.InventoryViewModel
 
 @Composable
 fun HomeScreen(
     portals:    List<NavItem>,
     onNavigate: (String) -> Unit,
-    onBack:     () -> Unit,
-    viewModel:  HomeViewModel = viewModel()
+    inventoryViewModel: InventoryViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val isHacked by viewModel.isHacked.collectAsState()
+    val inventoryState by inventoryViewModel.uiState.collectAsState()
+    val isHacked by inventoryViewModel.isHacked.collectAsState()
 
     Column(
         modifier = Modifier
@@ -59,19 +53,17 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.primary)
-            }
+            Spacer(modifier = Modifier.size(48.dp))
             
             Text(
-                text = if (isHacked) stringResource(R.string.sys_home) else stringResource(R.string.central_command),
+                text = if (isHacked) "HÖLLVANIA_HOME" else "COMANDO CENTRAL",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                 letterSpacing = 2.sp,
                 fontFamily = if (isHacked) FontFamily.Monospace else FontFamily.Default
             )
 
-            IconButton(onClick = { viewModel.syncInventory() }) {
+            IconButton(onClick = { inventoryViewModel.syncInventory() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refrescar", tint = MaterialTheme.colorScheme.primary)
             }
         }
@@ -82,12 +74,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             item {
-                StatusCard(uiState, isHacked)
+                StatusCard(inventoryState, isHacked)
             }
 
             item {
                 Text(
-                    text      = if (isHacked) stringResource(R.string.quote_hacked) else stringResource(R.string.quote),
+                    text      = if (isHacked) "[DATA_INTACTA]: El Vacío nos observa. No hay vuelta atrás." else "El Vacío recompensa la paciencia y castiga la avaricia.",
                     fontSize  = 12.sp,
                     color     = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -100,7 +92,7 @@ fun HomeScreen(
 
             item {
                 Text(
-                    text          = if (isHacked) stringResource(R.string.access_network) else stringResource(R.string.portals_label),
+                    text          = if (isHacked) "ACCESO_RED" else "PORTALES DISPONIBLES",
                     fontSize      = 10.sp,
                     color         = MaterialTheme.colorScheme.primary,
                     fontWeight    = FontWeight.Bold,
@@ -132,7 +124,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun StatusCard(uiState: UiState, isHacked: Boolean) {
+fun StatusCard(inventoryState: InventoryUiState, isHacked: Boolean) {
     val infiniteTransition = rememberInfiniteTransition(label = "glow")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.1f,
@@ -145,12 +137,18 @@ fun StatusCard(uiState: UiState, isHacked: Boolean) {
     )
 
     val accentColor = MaterialTheme.colorScheme.primary
+    var showDetails by remember { mutableStateOf(false) }
+
+    val inventory = (inventoryState as? InventoryUiState.Success)?.inventory
+    val totalPlat = inventory?.items?.sumOf { (it.avgPrice ?: 0.0) * it.quantity } ?: 0.0
+    val itemCount = inventory?.items?.size ?: 0
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
+            .clickable { showDetails = !showDetails }
             .drawBehind {
                 drawRoundRect(
                     color = accentColor.copy(alpha = 0.2f),
@@ -171,9 +169,13 @@ fun StatusCard(uiState: UiState, isHacked: Boolean) {
     ) {
         Column {
             Text(
-                text = if (isHacked) stringResource(R.string.critical_system_sync) else stringResource(R.string.arsenal_synced),
+                text = if (inventory != null) {
+                    if (isHacked) "CRITICAL_SYSTEM_SYNC" else "ARSENAL SINCRONIZADO"
+                } else {
+                    "SINCRONIZACIÓN REQUERIDA"
+                },
                 fontSize = 10.sp,
-                color = accentColor,
+                color = if (inventory != null) accentColor else Color.Gray,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
                 fontFamily = if (isHacked) FontFamily.Monospace else FontFamily.Default
@@ -188,31 +190,43 @@ fun StatusCard(uiState: UiState, isHacked: Boolean) {
             ) {
                 Column {
                     Text(
-                        text = if (isHacked) "0x7E0_P" else "~228p",
+                        text = if (inventory != null) "~${totalPlat.toInt()}p" else "???",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = accentColor,
                         fontFamily = FontFamily.Monospace,
                     )
                     Text(
-                        text = "≈ $3 USD · 15/03 14:53",
+                        text = if (inventory != null) "≈ \$${(totalPlat * 0.013).toInt()} USD" else "Valor desconocido",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                 }
                 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(if (isHacked) "ERR_ITEMS" else "29 ítems WFM", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                    Text("16 Rivens · 14 Arcanos", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    Text(if (inventory != null) "$itemCount ítems WFM" else "Ítems: ?", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+            }
+
+            if (showDetails && inventory != null) {
+                Spacer(Modifier.height(16.dp))
+                HorizontalDivider(color = accentColor.copy(alpha = 0.2f))
+                inventory.items.take(5).forEach { item ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(item.name, fontSize = 10.sp, color = Color.Gray)
+                        Text("${(item.avgPrice ?: 0.0).toInt()}p", fontSize = 10.sp, color = accentColor)
+                    }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusChip("Sync OK", ColorGreen, isHacked)
-                StatusChip("Baro: 5d", ColorGold, isHacked)
-                StatusChip("Market: 3+", accentColor, isHacked)
+                StatusChip(if (inventory != null) "Sync OK" else "Offline", if (inventory != null) ColorGreen else Color.Gray, isHacked)
+                StatusChip("Market: Conectado", accentColor, isHacked)
             }
         }
     }
@@ -223,7 +237,7 @@ fun StatusChip(text: String, color: Color, isHacked: Boolean) {
     Surface(
         color = color.copy(alpha = 0.1f),
         shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
         Text(
             text = if (isHacked) "[${text.uppercase()}]" else text,

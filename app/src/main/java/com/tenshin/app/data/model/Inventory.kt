@@ -24,5 +24,14 @@ data class InventoryItem(
     @SerializedName("rank") val rank: Int? = null,
     @SerializedName("is_riven") val isRiven: Boolean = false,
     @SerializedName("avg_price") val avgPrice: Double? = null,
-    @SerializedName("category") val category: ItemCategory = ItemCategory.OTHER
+    @SerializedName("category") val category: ItemCategory = ItemCategory.OTHER,
+    @SerializedName("riven_stats") val rivenStats: List<RivenStat>? = null,
+    @SerializedName("weapon_name") val weaponName: String? = null,
+    @SerializedName("mastered") val mastered: Boolean = false // Nuevo campo para MR
+)
+
+data class RivenStat(
+    @SerializedName("name") val name: String,
+    @SerializedName("value") val value: Float,
+    @SerializedName("positive") val positive: Boolean
 )
